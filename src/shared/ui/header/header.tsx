@@ -13,12 +13,6 @@ export const Header = ({ renderAccountBar }: Props) => (
                 <Link to='/'>
                     Playlists
                 </Link>
-                <Link to='/my-playlists'>
-                    My Playlists
-                </Link>
-                <Link to='/oauth/callback'>
-                    temp page
-                </Link>
             </div>
 
             <div>{renderAccountBar()}</div>
