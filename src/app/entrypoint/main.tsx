@@ -22,9 +22,9 @@ const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
             staleTime: Infinity,
-            refetchOnMount: false,
-            refetchOnWindowFocus: false,
-            refetchOnReconnect: false,
+            refetchOnMount: true,
+            refetchOnWindowFocus: true,
+            refetchOnReconnect: true,
             gcTime: 5 * 60 * 1000,
         }
     }
