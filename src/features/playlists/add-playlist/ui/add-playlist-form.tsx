@@ -11,6 +11,7 @@ export const AddPlaylistForm = () => {
 
     const {mutate} = useMutation({
         mutationFn: async (data: CreatePlaylistRequestPayload) => {
+            data.data.type = 'ppp'
             const response = await client.POST("/playlists", {
                 body: data
             })
@@ -30,7 +31,7 @@ export const AddPlaylistForm = () => {
 
     return <form onSubmit={handleSubmit(onSubmit)}>
         <h2>Add New Playlist</h2>
-        <p{...register('data.type')}>
+        <p>
             <input {...register('data.attributes.title')}/>
         </p>
         <p>
