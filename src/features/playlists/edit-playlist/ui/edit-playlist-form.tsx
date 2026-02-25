@@ -1,12 +1,10 @@
 import {useEffect} from "react";
 import {useForm} from "react-hook-form";
 import type {components} from "../../../../shared/api/schema.ts";
-import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
-import {client} from "../../../../shared/api/client.ts";
-import {useMeQuery} from "../../../auth/api/use-me-query.ts";
+import {usePlaylistQuery} from "../api/use-playlist-query.ts";
+import {useUpdatePlaylistMutation} from "../api/use-update-playlist-mutation.ts";
 
 type UpdatePlaylistRequestPayload = components['schemas']['UpdatePlaylistRequestPayload']
-type GetPlaylistsOutput = components['schemas']['GetPlaylistsOutput']
 type Props = {
     playlistId: string | null
 }
@@ -14,93 +12,16 @@ type Props = {
 export const EditPlaylistForm = ({playlistId}: Props) => {
     const {register, handleSubmit, reset} = useForm<UpdatePlaylistRequestPayload>()
 
-    const {data: meData} = useMeQuery()
-
     useEffect(() => {
         reset()
     }, [playlistId])
 
-    const {data, isPending, isError} = useQuery({
-        queryKey: ["playlists", 'details', playlistId],
-        queryFn: async () => {
-            const response = await client.GET('/playlists/{playlistId}',
-                {params: {path: {playlistId: playlistId!}}})
-            return response.data!
-        },
-        enabled: !!playlistId
-    })
+    const {data, isPending, isError} = usePlaylistQuery(playlistId)
 
-    const queryClient = useQueryClient()
-
-    const key = ['playlists', 'my', meData!.userId]
-
-    const {mutate} = useMutation({
-        mutationFn: async (data: UpdatePlaylistRequestPayload) => {
-            // data.data.type = 'ppp'
-            // data.data.attributes.tagIds = []
-            const response = await client.PUT("/playlists/{playlistId}", {
-                params: {path: {playlistId: playlistId!}},
-                body: {
-                    ...data,
-                    data: {
-                        ...data.data,
-                        type: 'playlist',
-                        attributes: {
-                            ...data.data.attributes,
-                            tagIds: []
-                        }
-                    }
-                }
-            })
-            return response.data
-        },
-        onMutate: async (data: UpdatePlaylistRequestPayload) => {
-            // Cancel any outgoing refetches
-            // (so they don't overwrite our optimistic update)
-            await queryClient.cancelQueries({ queryKey: ['playlists'] })
-
-            // Snapshot the previous value
-            const previousMyPlaylists = queryClient.getQueryData(key)
-
-            // Optimistically update to the new value
-            queryClient.setQueryData(key, (oldData: GetPlaylistsOutput) => {
-                return {
-                    ...oldData,
-                    data: oldData.data.map(p => {
-                        if (p.id === playlistId) return {
-                            ...p,
-                            attributes: {
-                                ...p.attributes,
-                                description: data.data.attributes.description,
-                                title: data.data.attributes.title,
-                            }
-                        }
-                        else return p
-                    })
-                }
-            })
-
-            // Return a result with the previous and new playlist
-            return { previousMyPlaylists }
-        },
-        // If the mutation fails, use the result we returned above
-        onError: (_, __: UpdatePlaylistRequestPayload, context) => {
-            queryClient.setQueryData(
-                key,
-                context!.previousMyPlaylists,
-            )
-        },
-        // Always refetch after error or success:
-        onSettled: () => {
-            queryClient.invalidateQueries({
-                queryKey: ["playlists"],
-                refetchType: 'all'
-            })
-        }
-    })
+    const {mutate} = useUpdatePlaylistMutation()
 
     const onSubmit = (data: UpdatePlaylistRequestPayload) => {
-        mutate(data)
+        mutate({...data, playlistId: playlistId!})
     }
 
     if (!playlistId) return <></>
