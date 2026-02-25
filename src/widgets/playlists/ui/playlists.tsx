@@ -7,22 +7,28 @@ import {DeletePlaylist} from "../../../features/playlists/delete-playlist/ui/del
 type Props = {
     userId?: string
     onPlaylistSelected?: (playlistId: string) => void
+    isSearchActive?: boolean
 }
 
-export const Playlists = ({userId, onPlaylistSelected}: Props) => {
+export const Playlists = ({userId, onPlaylistSelected, isSearchActive}: Props) => {
     const [page, setPage] = useState(1)
     const [search, setSearch] = useState('')
-    
+
+    const key = userId ? ['playlists', 'my', userId] : ['playlists', {page, search}]
+    const queryParams = userId ? {
+        userId
+    } : {
+        pageNumber: page,
+        search
+    }
+
     const query = useQuery({
-        queryKey: ['playlists', {page, search, userId}],
+        // eslint-disable-next-line @tanstack/query/exhaustive-deps
+        queryKey: key,
         queryFn: async ({signal}) => {
             const response = await client.GET('/playlists', {
                 params: {
-                    query: {
-                        pageNumber: page,
-                        search,
-                        userId
-                    }
+                    query: queryParams
                 },
                 signal
             })
@@ -45,10 +51,14 @@ export const Playlists = ({userId, onPlaylistSelected}: Props) => {
     if (query.isError) return <span>Error: {JSON.stringify(query.error.message)}</span>
 
     return (<div>
-        <div>
-            <input value={search} onChange={e => setSearch(e.currentTarget.value)} placeholder={'search...'} />
-        </div>
-        <hr/>
+        {isSearchActive && <>
+            <div>
+                <input value={search} onChange={e => setSearch(e.currentTarget.value)} placeholder={'search...'}/>
+            </div>
+            <hr/>
+        </>
+        }
+
         <Pagination pagesCount={query.data.meta.pagesCount}
                     currentPage={page}
                     onPageNumberChange={setPage}
@@ -57,7 +67,7 @@ export const Playlists = ({userId, onPlaylistSelected}: Props) => {
         <ul>
             {query.data.data.map(playlist => (
                 <li key={playlist.id} onClick={() => handleSelectPlaylistClick(playlist.id)}>
-                    {playlist.attributes.title} <DeletePlaylist playlistId={playlist.id} />
+                    {playlist.attributes.title} <DeletePlaylist playlistId={playlist.id}/>
                 </li>
             ))}
         </ul>

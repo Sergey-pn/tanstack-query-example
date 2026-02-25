@@ -5,7 +5,7 @@ export function PlaylistsPage() {
     return (
         <div>
             <h2>hello it-incubator!!!</h2>
-            <Playlists/>
+            <Playlists isSearchActive={true}/>
         </div>)
 }
 
