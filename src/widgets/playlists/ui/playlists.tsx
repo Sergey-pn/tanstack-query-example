@@ -6,10 +6,11 @@ import {usePlaylistsQuery} from "../api/use-playlists-query.ts";
 type Props = {
     userId?: string
     onPlaylistSelected?: (playlistId: string) => void
+    onPlaylistDeleted?: (playlistId: string) => void
     isSearchActive?: boolean
 }
 
-export const Playlists = ({userId, onPlaylistSelected, isSearchActive}: Props) => {
+export const Playlists = ({userId, onPlaylistSelected, onPlaylistDeleted, isSearchActive}: Props) => {
     const [pageNumber, setPageNumber] = useState(1)
     const [search, setSearch] = useState('')
 
@@ -17,6 +18,10 @@ export const Playlists = ({userId, onPlaylistSelected, isSearchActive}: Props) =
 
     const handleSelectPlaylistClick = (playlistId: string) => {
         onPlaylistSelected?.(playlistId)
+    }
+
+    const handleDeletePlaylist = (playlistId: string) => {
+        onPlaylistDeleted?.(playlistId)
     }
 
     if (query.isPending) return <span>Loading...</span>
@@ -38,8 +43,9 @@ export const Playlists = ({userId, onPlaylistSelected, isSearchActive}: Props) =
         />
         <ul>
             {query.data.data.map(playlist => (
-                <li key={playlist.id} onClick={() => handleSelectPlaylistClick(playlist.id)}>
-                    {playlist.attributes.title} <DeletePlaylist playlistId={playlist.id}/>
+                <li key={playlist.id}>
+                    <span onClick={() => handleSelectPlaylistClick(playlist.id)}>{playlist.attributes.title}</span>
+                    <DeletePlaylist playlistId={playlist.id} onDeleted={handleDeletePlaylist}/>
                 </li>
             ))}
         </ul>

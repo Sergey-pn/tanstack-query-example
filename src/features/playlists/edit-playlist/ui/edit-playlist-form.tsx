@@ -7,9 +7,10 @@ import {useUpdatePlaylistMutation} from "../api/use-update-playlist-mutation.ts"
 type UpdatePlaylistRequestPayload = components['schemas']['UpdatePlaylistRequestPayload']
 type Props = {
     playlistId: string | null
+    onCancelEditing: () => void
 }
 
-export const EditPlaylistForm = ({playlistId}: Props) => {
+export const EditPlaylistForm = ({playlistId, onCancelEditing}: Props) => {
     const {register, handleSubmit, reset} = useForm<UpdatePlaylistRequestPayload>()
 
     useEffect(() => {
@@ -22,6 +23,10 @@ export const EditPlaylistForm = ({playlistId}: Props) => {
 
     const onSubmit = (data: UpdatePlaylistRequestPayload) => {
         mutate({...data, playlistId: playlistId!})
+    }
+
+    const handleCancelEditingClick = () => {
+        onCancelEditing()
     }
 
     if (!playlistId) return <></>
@@ -37,5 +42,6 @@ export const EditPlaylistForm = ({playlistId}: Props) => {
             <textarea {...register('data.attributes.description')} defaultValue={data.data.attributes.description!} ></textarea>
         </p>
         <button type={'submit'}>Save</button>
+        <button type={'submit'} onClick={handleCancelEditingClick}>Cancel</button>
     </form>
 }
