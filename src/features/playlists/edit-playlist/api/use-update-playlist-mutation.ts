@@ -1,19 +1,23 @@
 import {client} from "../../../../shared/api/client.ts";
 import {useMutation, useQueryClient} from "@tanstack/react-query";
-import type {components} from "../../../../shared/api/schema.ts";
 import {playlistsKeys} from "../../../../shared/api/keys-factories/playlists-keys-factory.ts";
+import type {components} from "../../../../shared/api/schema.ts";
+import type {JsonApiErrorDocument} from "../../../../shared/util/json-api-error.ts";
 type UpdatePlaylistRequestPayload = components['schemas']['UpdatePlaylistRequestPayload']
 type GetPlaylistsOutput = components['schemas']['GetPlaylistsOutput']
+
 type MutationVariables = UpdatePlaylistRequestPayload & {playlistId: string}
 
-export const useUpdatePlaylistMutation = () => {
+export const useUpdatePlaylistMutation = ({onSuccess, onError}: {
+    onSuccess?: () => void
+    onError?: (error: JsonApiErrorDocument) => void
+}) => {
     const queryClient = useQueryClient()
+
     const key = playlistsKeys.myList()
 
     return useMutation({
         mutationFn: async (variables: MutationVariables) => {
-            // data.data.type = 'ppp'
-            // data.data.attributes.tagIds = []
             const {playlistId, ...rest} = variables
             const response = await client.PUT("/playlists/{playlistId}", {
                 params: {path: {playlistId: playlistId}},
@@ -58,11 +62,15 @@ export const useUpdatePlaylistMutation = () => {
             return { previousMyPlaylists }
         },
         // If the mutation fails, use the result we returned above
-        onError: (_, __: MutationVariables, context) => {
+        onError: (error, __: MutationVariables, context) => {
             queryClient.setQueryData(
                 key,
                 context!.previousMyPlaylists,
             )
+            onError?.(error as unknown as JsonApiErrorDocument)
+        },
+        onSuccess: () => {
+            onSuccess?.()
         },
         // Always refetch after error or success:
         onSettled: (_, __, variables: MutationVariables) => {

@@ -1,7 +1,6 @@
-import {type Path, useForm} from "react-hook-form";
+import {useForm} from "react-hook-form";
 import type {components} from "../../../../shared/api/schema.ts";
 import {useAddPlaylistMutation} from "../api/use-add-playlist-mutation.ts";
-import {isJsonApiErrorDocument, parseJsonApiErrors} from "../../../../shared/util/json-api-error.ts";
 import {queryErrorHandlerForRHFFactory} from "../../../../shared/ui/util/query-error-handler-for-rhf-factory.ts";
 type CreatePlaylistRequestPayload = components['schemas']['CreatePlaylistRequestPayload']
 type JsonApiErrorDocument = components['schemas']['JsonApiErrorDocument']
@@ -18,18 +17,6 @@ export const AddPlaylistForm = () => {
         }
         catch(error) {
             queryErrorHandlerForRHFFactory({setError})(error as unknown as JsonApiErrorDocument)
-            // if (isJsonApiErrorDocument(error)) {
-            //     const {fieldErrors, globalErrors} = parseJsonApiErrors(error)
-            //     for (const [field, message] of Object.entries(fieldErrors)) {
-            //         setError(field as Path<CreatePlaylistRequestPayload>, {type: 'server', message})
-            //     }
-            //     if (globalErrors.length > 0) {
-            //         setError('root.server', {
-            //             type: 'server',
-            //             message: globalErrors.join('\n'),
-            //         })
-            //     }
-            // }
         }
     }
 
